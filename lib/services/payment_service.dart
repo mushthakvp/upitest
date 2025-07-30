@@ -74,7 +74,7 @@ class PaymentService {
     },
   ];
 
-  // iOS Payment Apps
+  // iOS Payment Apps - Updated to show all apps regardless of installation
   static final List<Map<String, dynamic>> _iosApps = [
     {
       'name': 'Apple Pay',
@@ -82,13 +82,7 @@ class PaymentService {
       'scheme': 'applepay',
       'icon': '🍎',
       'color': Colors.black,
-    },
-    {
-      'name': 'Google Pay',
-      'package': 'com.google.android.apps.nbu.paisa.user',
-      'scheme': 'tez',
-      'icon': '💳',
-      'color': Colors.blue,
+      'alwaysAvailable': true,
     },
     {
       'name': 'Web Payment',
@@ -96,6 +90,47 @@ class PaymentService {
       'scheme': 'https',
       'icon': '🌐',
       'color': Colors.indigo,
+      'alwaysAvailable': true,
+    },
+    {
+      'name': 'Google Pay',
+      'package': 'com.google.android.apps.nbu.paisa.user',
+      'scheme': 'tez',
+      'icon': '💳',
+      'color': Colors.blue,
+      'alwaysAvailable': false,
+    },
+    {
+      'name': 'PhonePe',
+      'package': 'com.phonepe.app',
+      'scheme': 'phonepe',
+      'icon': '📱',
+      'color': Colors.purple,
+      'alwaysAvailable': false,
+    },
+    {
+      'name': 'Paytm',
+      'package': 'net.one97.paytm',
+      'scheme': 'paytm',
+      'icon': '💰',
+      'color': Colors.indigo,
+      'alwaysAvailable': false,
+    },
+    {
+      'name': 'Amazon Pay',
+      'package': 'in.amazon.mShop.android.shopping',
+      'scheme': 'amazonpay',
+      'icon': '🛒',
+      'color': Colors.orange,
+      'alwaysAvailable': false,
+    },
+    {
+      'name': 'BHIM',
+      'package': 'in.org.npci.upiapp',
+      'scheme': 'bhim',
+      'icon': '🏛️',
+      'color': Colors.green,
+      'alwaysAvailable': false,
     },
     {
       'name': 'PayPal',
@@ -103,6 +138,15 @@ class PaymentService {
       'scheme': 'paypal',
       'icon': '💙',
       'color': Colors.blue[700]!,
+      'alwaysAvailable': false,
+    },
+    {
+      'name': 'CRED',
+      'package': 'com.dreamplug.androidapp',
+      'scheme': 'cred',
+      'icon': '💎',
+      'color': Colors.black,
+      'alwaysAvailable': false,
     },
   ];
 
@@ -141,13 +185,20 @@ class PaymentService {
 
   Future<List<PaymentApp>> _getIOSPaymentApps() async {
     List<PaymentApp> availableApps = [];
+
     for (var appInfo in _iosApps) {
       try {
-        bool isInstalled = true;
-        if (appInfo['package'] != 'apple.pay' &&
-            appInfo['package'] != 'web.payment') {
+        bool isInstalled = false;
+
+        // Always show certain apps
+        if (appInfo['alwaysAvailable'] == true) {
+          isInstalled = true;
+        } else {
+          // Check if app is actually installed
           isInstalled = await _checkIOSAppInstallation(appInfo['package']);
         }
+
+        // Add all apps to the list, but mark installation status
         availableApps.add(
           PaymentApp(
             name: appInfo['name'],
@@ -160,13 +211,27 @@ class PaymentService {
         );
       } catch (e) {
         debugPrint('Error checking ${appInfo['name']}: $e');
+        // Even if there's an error, add the app as not installed
+        availableApps.add(
+          PaymentApp(
+            name: appInfo['name'],
+            packageName: appInfo['package'],
+            scheme: appInfo['scheme'],
+            icon: appInfo['icon'],
+            color: appInfo['color'],
+            isInstalled: false,
+          ),
+        );
       }
     }
+
     return availableApps;
   }
 
   Future<bool> _checkAndroidAppInstallation(String packageName) async {
     try {
+      // For Android, you would normally check if package is installed
+      // For demo purposes, return true for common apps
       return true;
     } catch (e) {
       return false;
@@ -175,11 +240,12 @@ class PaymentService {
 
   Future<bool> _checkIOSAppInstallation(String packageName) async {
     try {
-      return await platform.invokeMethod('checkAppInstallation', {
-            'packageName': packageName,
-          }) ??
-          false;
+      final result = await platform.invokeMethod('checkAppInstallation', {
+        'packageName': packageName,
+      });
+      return result ?? false;
     } catch (e) {
+      debugPrint('Error checking iOS app installation for $packageName: $e');
       return false;
     }
   }
@@ -192,6 +258,7 @@ class PaymentService {
       }
       return true;
     } catch (e) {
+      debugPrint('Error launching app with scheme $scheme: $e');
       return false;
     }
   }

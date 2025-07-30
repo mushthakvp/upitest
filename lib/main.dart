@@ -111,7 +111,7 @@ class HomePage extends StatelessWidget {
                     ),
                     SizedBox(height: 10),
                     Text(
-                      '₹100.00',
+                      '₹1.00',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 32,

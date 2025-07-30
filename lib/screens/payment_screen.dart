@@ -62,7 +62,9 @@ class _PaymentScreenState extends State<PaymentScreen>
         String txnId = call.arguments['txnId'] ?? '';
         String response = call.arguments['response'] ?? '';
 
-        _handlePaymentResponse(status, txnId, response);
+        if (mounted) {
+          _handlePaymentResponse(status, txnId, response);
+        }
       }
     });
   }
@@ -70,15 +72,19 @@ class _PaymentScreenState extends State<PaymentScreen>
   Future<void> _loadPaymentApps() async {
     try {
       List<PaymentApp> apps = await _paymentService.getAvailablePaymentApps();
-      setState(() {
-        availableApps = apps;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          availableApps = apps;
+          isLoading = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      _showErrorDialog('Error', 'Failed to load payment apps: $e');
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+        _showErrorDialog('Error', 'Failed to load payment apps: $e');
+      }
     }
   }
 
@@ -168,6 +174,8 @@ class _PaymentScreenState extends State<PaymentScreen>
   }
 
   void _showPaymentProgressDialog() {
+    if (!mounted) return;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -203,8 +211,10 @@ class _PaymentScreenState extends State<PaymentScreen>
             SizedBox(height: 20),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
-                _handlePaymentResponse('CANCELLED', '', '');
+                if (mounted && Navigator.canPop(context)) {
+                  Navigator.of(context).pop();
+                  _handlePaymentResponse('CANCELLED', '', '');
+                }
               },
               child: Text('Cancel Payment'),
             ),
@@ -213,9 +223,9 @@ class _PaymentScreenState extends State<PaymentScreen>
       ),
     );
 
-    // Auto timeout
+    // Auto timeout with proper mounted check
     Future.delayed(Duration(seconds: 60), () {
-      if (Navigator.canPop(context)) {
+      if (mounted && Navigator.canPop(context)) {
         Navigator.of(context).pop();
         _handlePaymentResponse('TIMEOUT', '', '');
       }
@@ -223,6 +233,8 @@ class _PaymentScreenState extends State<PaymentScreen>
   }
 
   void _handlePaymentResponse(String status, String txnId, String response) {
+    if (!mounted) return;
+
     if (Navigator.canPop(context)) {
       Navigator.of(context).pop();
     }
@@ -288,6 +300,8 @@ class _PaymentScreenState extends State<PaymentScreen>
   }
 
   void _showAppNotInstalledDialog(PaymentApp app) {
+    if (!mounted) return;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -331,6 +345,8 @@ class _PaymentScreenState extends State<PaymentScreen>
   }
 
   void _showApplePayDialog() {
+    if (!mounted) return;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -356,6 +372,8 @@ class _PaymentScreenState extends State<PaymentScreen>
   }
 
   void _showErrorDialog(String title, String message) {
+    if (!mounted) return;
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
