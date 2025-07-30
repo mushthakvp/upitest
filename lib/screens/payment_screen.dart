@@ -26,9 +26,9 @@ class _PaymentScreenState extends State<PaymentScreen>
   late Animation<double> _fadeAnimation;
 
   final PaymentConfig config = PaymentConfig(
-    receiverUpiId: "merchant@paytm",
-    receiverName: "Demo Merchant",
-    amount: 100.0,
+    receiverUpiId: "9061213930@kotak",
+    receiverName: "Fouvty",
+    amount: 1.0,
     transactionNote: "Payment for demo order",
     currency: "INR",
   );
